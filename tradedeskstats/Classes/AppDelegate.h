@@ -1,8 +1,8 @@
 //
 //  AppDelegate.h
-//  tradedeskstats
+//  Trade Desk Stats
 //
-//  Created by Alex Pylko on 12/14/11.
+//  Created by Alex Pylko on 11/21/11.
 //  Copyright (c) 2011 alexpylko@gmail.com. All rights reserved.
 //
 

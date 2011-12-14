@@ -143,14 +143,8 @@
 		A62DAC46149913440038919B = {
 			isa = PBXGroup;
 			children = (
-				A62DACE61499234F0038919B /* Default-Landscape~ipad.png */,
-				A62DACE4149923390038919B /* Default-Portrait~ipad.png */,
-				A62DACE21499232E0038919B /* Icon-72.png */,
-				A62DACE0149922FD0038919B /* Default@2x.png */,
-				A62DACDE149922F80038919B /* Default.png */,
-				A62DACDC149922E60038919B /* Icon-114.png */,
-				A62DACDA149922CD0038919B /* Icon-57.png */,
-				A62DAC5B149913440038919B /* tradedeskstats */,
+				A62DAC5B149913440038919B /* TradeDeskStats */,
+				A62DACE8149924FC0038919B /* App icons */,
 				A62DAC54149913440038919B /* Frameworks */,
 				A62DAC52149913440038919B /* Products */,
 			);
@@ -175,7 +169,7 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		A62DAC5B149913440038919B /* tradedeskstats */ = {
+		A62DAC5B149913440038919B /* TradeDeskStats */ = {
 			isa = PBXGroup;
 			children = (
 				A62DAC79149914D40038919B /* Classes */,
@@ -185,6 +179,7 @@
 				A62DAC6A149913440038919B /* MainStoryboard_iPad.storyboard */,
 				A62DAC5C149913440038919B /* Supporting Files */,
 			);
+			name = TradeDeskStats;
 			path = tradedeskstats;
 			sourceTree = "<group>";
 		};
@@ -287,6 +282,20 @@
 				A62DACB2149914D40038919B /* tradedeskstats.sqlite3 */,
 			);
 			path = Storage;
+			sourceTree = "<group>";
+		};
+		A62DACE8149924FC0038919B /* App icons */ = {
+			isa = PBXGroup;
+			children = (
+				A62DACE61499234F0038919B /* Default-Landscape~ipad.png */,
+				A62DACE4149923390038919B /* Default-Portrait~ipad.png */,
+				A62DACE21499232E0038919B /* Icon-72.png */,
+				A62DACE0149922FD0038919B /* Default@2x.png */,
+				A62DACDE149922F80038919B /* Default.png */,
+				A62DACDC149922E60038919B /* Icon-114.png */,
+				A62DACDA149922CD0038919B /* Icon-57.png */,
+			);
+			name = "App icons";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

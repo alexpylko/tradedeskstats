@@ -11,7 +11,15 @@
 #import "SBJson.h"
 #import "Account.h"
 
-#define JSON_REMOTE_URL @"http://localhost/iphone.php?account=%@"
+#define JSON_REMOTE_URL @"http://impartdata.com/systemstructure/services/trades.json.php?user=%@&sys=Timed"
+
+
+@interface DetailViewController ()
+- (void)addEmptyLabel;
+- (void)removeEmptyLabel;
+- (void)calculateAutoResizeFactorWithOrientation:(UIInterfaceOrientation)orientation;
+@property (nonatomic) CGFloat autoSizeFactor;
+@end
 
 @implementation DetailViewController
 
@@ -20,52 +28,50 @@
 @synthesize maxNumberCells;
 @synthesize delegate;
 @synthesize recordsData;
+@synthesize activityIndicator;
+@synthesize availLabel;
+@synthesize autoSizeFactor;
 
 static CGFloat widthCols [] = { 
-    120.0, 45.0, 55.0, 55.0, 65.0 /* 4 */, 
-    65.0, 65.0, 120.0, 60.0, 60.0, /* 9 */
-    50.0, 44.0, 40.0, 65.0 
+    80.0, 
+    60.0, 
+    60.0, 
+    140.0, 
+    140.0,
+    110.0, 
+    110.0, 
+    80.0
 };
 
 static const char * headerCols[] = 
 {
-    "Opentime",
+    "Instrument",
     "Type",
     "Size",
-    "Pair",
-    "Price",
-    "S/L",
-    "T/P",
-    "Close time",
-    "Price",
-    "Comm",
-    "Taxes",
-    "Swap",
-    "Pips",
+    "Open Time",
+    "Close Time",
+    "Price1",
+    "Price2",
     "Profit"
 };
 
 static const char * keysCols[] = 
 { 
-    "opentime",
+    "instrument",
     "type",
     "size",
-    "pair",
-    "price1",
-    "sl",
-    "tp",
+    "opentime",
     "closetime",
+    "price1",
     "price2",
-    "comm",
-    "taxes",
-    "swap",
-    "pips",
     "profit"
 };
 
 
 - (void)dealloc
 {
+    [activityIndicator release];
+    [availLabel release];
     [super dealloc];
 }
 
@@ -86,18 +92,35 @@ static const NSTimeInterval kRepeatDuration = 60.0;
 -(void)viewDidLoad;
 {
     [super viewDidLoad];
+    
     maxNumberRows = 10;
-    maxNumberCells = 14;
+    maxNumberCells = 8;
     demoGridView.cellHeight = 30.0f;
     demoGridView.headerHeight = 30.0f;
     
+    [self calculateAutoResizeFactorWithOrientation:[self interfaceOrientation]];
+    
+    Account * account = [self.delegate.accounts objectAtIndex:self.delegate.selected];
+    self.title = account.name;
+    
+    self.wantsFullScreenLayout = YES;
+    
+    UIBarButtonItem *button = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh
+                                                                            target:self
+                                                                            action:@selector(refresh)];
+    self.navigationItem.rightBarButtonItem = button;
+    [button release];
+    
     self.recordsData = [NSArray array];
     
-    [self doRequest];
+    [self refresh];
 }
 
-- (void) doRequest;
+- (void) refresh;
 {
+    [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    [activityIndicator startAnimating];
+    
     Account * account = [self.delegate.accounts objectAtIndex:self.delegate.selected];
     NSString * accountURL = [NSString stringWithFormat:JSON_REMOTE_URL, account.name];
     
@@ -120,13 +143,15 @@ static const NSTimeInterval kRepeatDuration = 60.0;
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error 
 {
-    UIAlertView * alert = [[UIAlertView alloc] initWithTitle:@"Error occured" message:[NSString stringWithFormat:@"Connection failed: %@", [error description]] delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
-    [alert show];
-    [alert release];
+    [activityIndicator stopAnimating];
+//    UIAlertView * alert = [[UIAlertView alloc] initWithTitle:@"Error occured" message:[NSString stringWithFormat:@"Connection failed: %@", [error description]] delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+//    [alert show];
+//    [alert release];
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection 
 {
+    [activityIndicator stopAnimating];
 	[connection release];
     
 	NSString *responseString = [[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding];
@@ -135,18 +160,38 @@ static const NSTimeInterval kRepeatDuration = 60.0;
     NSDictionary *response = [responseString JSONValue];
     if( [response isKindOfClass:[NSDictionary class]] )
     {
-        NSDictionary * result = [response objectForKey:@"result"];
-        if( [result isKindOfClass:[NSDictionary class]] )
+        NSArray * records = [response objectForKey:@"trades"];
+        if( [records isKindOfClass:[NSArray class]] )
         {
-            NSArray * records = [result objectForKey:@"records"];
-            if( [records isKindOfClass:[NSArray class]] )
-            {
-                self.recordsData = records;
-            }
+            self.recordsData = records;
         }
     }
     
+    if ( [recordsData count] )
+    {
+        [self removeEmptyLabel];
+    }
+    else
+    {
+        [self addEmptyLabel];
+    }
+    
     [responseString release];
+}
+
+- (void) addEmptyLabel;
+{
+    UILabel * label = [[UILabel alloc] initWithFrame:CGRectMake(5, 5, 320, 40)];
+    label.text = @"No data available for the chosen account";
+    label.textColor = [UIColor blackColor];
+    [self.view addSubview:label];
+    self.availLabel = label;
+    [label release];
+}
+
+- (void) removeEmptyLabel;
+{
+    [self.availLabel removeFromSuperview];
 }
 
 - (void)setRecordsData:(NSArray*)records;
@@ -157,37 +202,14 @@ static const NSTimeInterval kRepeatDuration = 60.0;
     {
         [demoGridView reloadData];
     }
-    else
-    {
-        [self addEmptyLabel];
-    }
 }
-
-- (void) addEmptyLabel;
-{
-    UILabel * label = [[UILabel alloc] initWithFrame:CGRectMake(5, 5, 200, 40)];
-    label.text = @"No data available";
-    label.textColor = [UIColor blackColor];
-    [demoGridView addSubview:label];
-    [label release];
-}
-
-- (void)loadView 
-{
-    self.wantsFullScreenLayout = YES;
-    PFGridView *view = [[PFGridView alloc]
-                           initWithFrame:[UIScreen mainScreen].applicationFrame];
-    view.dataSource = self;
-    view.delegate = self;
-    self.view = view;
-    self.demoGridView = view;
     
-    [view release];
-}
 
 -(void)viewDidUnload;
 {
     self.delegate = nil;
+    self.activityIndicator = nil;
+    self.availLabel = nil;
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
     [super viewDidUnload];
 }
@@ -198,8 +220,36 @@ static const NSTimeInterval kRepeatDuration = 60.0;
     return YES;
 }
 
+-(NSInteger)tableWidth;
+{
+    NSInteger total = 0;
+    for ( NSInteger i = 0; i < maxNumberCells; ++i) 
+    {
+        total += widthCols[i];
+    }
+    return total;
+}
+
+-(void)calculateAutoResizeFactorWithOrientation:(UIInterfaceOrientation)orientation;
+{
+    autoSizeFactor = 1;
+    if ( UIInterfaceOrientationIsLandscape(orientation) )
+    {
+        NSInteger width = [self tableWidth];
+        CGRect frame = [[UIScreen mainScreen] applicationFrame];
+        if ( ( width < frame.size.height ) && ( width > 0 ) )
+        {
+            autoSizeFactor = frame.size.height / width;
+        }
+    }
+}
+
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation 
 {
+    if ( UIInterfaceOrientationIsPortrait(fromInterfaceOrientation))
+    {
+        [self calculateAutoResizeFactorWithOrientation:UIInterfaceOrientationLandscapeLeft];
+    }
     [demoGridView reloadData];
 }
 
@@ -228,7 +278,7 @@ static const NSTimeInterval kRepeatDuration = 60.0;
 - (CGFloat)gridView:(PFGridView *)gridView widthForColAtIndexPath:(PFGridIndexPath *)indexPath 
 {
     int i = indexPath.col;
-    return widthCols[i];
+    return (widthCols[i] * autoSizeFactor);
 }
 
 - (UIColor *) backgroundColorForIndexPath:(PFGridIndexPath *)indexPath {

@@ -16,7 +16,11 @@
     NSMutableData * responseData;
 }
 
+@property (nonatomic, retain) UILabel * availLabel;
+
 @property (nonatomic, retain) IBOutlet PFGridView * demoGridView;
+
+@property (nonatomic, retain) IBOutlet UIActivityIndicatorView * activityIndicator;
 
 @property (nonatomic) NSUInteger maxNumberRows;
 
@@ -26,7 +30,6 @@
 
 @property (nonatomic, retain) AccountViewController * delegate;
 
-- (void) addEmptyLabel;
-- (void) doRequest;
+- (void) refresh;
 
 @end
